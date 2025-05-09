@@ -1,7 +1,7 @@
 FROM rust:1.81.0 AS builder
 
 # Create a new empty shell project
-WORKDIR /usr/src/aau-ajet
+WORKDIR /usr/src/aau-nsiems
 COPY . .
 
 RUN mkdir -p data/uploads
@@ -19,18 +19,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Create app directory structure
-WORKDIR /usr/src/aau-ajet
+WORKDIR /usr/src/aau-nsiems
 RUN mkdir -p src/static
 
 RUN mkdir -p data/uploads
 
 
 # Copy the build artifact from the builder stage
-COPY --from=builder /usr/src/aau-ajet/target/release/journal-site /usr/src/aau-ajet/journal-site
+COPY --from=builder /usr/src/aau-nsiems/target/release/journal-site /usr/src/aau-nsiems/journal-site
 
 # Copy static files and templates maintaining the original structure
-COPY --from=builder /usr/src/aau-ajet/src/static /usr/src/aau-ajet/src/static
-COPY --from=builder /usr/src/aau-ajet/templates /usr/src/aau-ajet/templates
+COPY --from=builder /usr/src/aau-nsiems/src/static /usr/src/aau-nsiems/src/static
+COPY --from=builder /usr/src/aau-nsiems/templates /usr/src/aau-nsiems/templates
 
 ENV RUST_LOG=info
 
