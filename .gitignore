@@ -1,4 +1,5 @@
 /target
 .env
 uploads
-aau_nsiems.db
+aau_nsiem.db
+data/
