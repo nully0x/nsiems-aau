@@ -87,10 +87,15 @@ pub async fn journal_handler() -> Result<HttpResponse, SubmissionError> {
 
     let mut archives: BTreeMap<i32, BTreeMap<i32, Vec<Journal>>> = BTreeMap::new();
     for journal in all_journals.iter() {
+        let issue_key = if journal.is_special_edition {
+            0 // Group special editions under issue 0
+        } else {
+            journal.issue_number.unwrap_or(0)
+        };
         archives
             .entry(journal.volume_number)
             .or_insert_with(BTreeMap::new)
-            .entry(journal.issue_number)
+            .entry(issue_key)
             .or_insert_with(Vec::new)
             .push(journal.clone());
     }
@@ -134,7 +139,7 @@ pub async fn journal_api_handler(
         journals.retain(|j| j.volume_number == volume);
 
         if let Some(issue) = query.issue {
-            journals.retain(|j| j.issue_number == issue);
+            journals.retain(|j| j.issue_number == Some(issue));
         }
     }
 
