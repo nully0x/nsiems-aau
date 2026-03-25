@@ -6,6 +6,7 @@ use serde::Deserialize;
 use serde_json::json;
 use std::collections::BTreeMap;
 
+use crate::config::get_journal_config;
 use crate::db::journal_repository::JournalRepository;
 use crate::db::schema::init_db;
 use crate::errors::SubmissionError;
@@ -17,6 +18,7 @@ struct JournalDetailTemplate {
     journal: Journal,
     id_string: String,
     is_admin: bool,
+    journal_name: String,
 }
 
 #[derive(Template, Debug)]
@@ -67,11 +69,14 @@ pub async fn journal_detail_handler(
         .map_err(|e| SubmissionError::DatabaseError(e.to_string()))?
         .is_some();
 
+    let config = get_journal_config();
+
     Ok(HttpResponse::Ok().body(
         JournalDetailTemplate {
             journal,
             id_string: journal_id.to_string(),
             is_admin,
+            journal_name: config.name,
         }
         .render()
         .map_err(|e| SubmissionError::InternalError(format!("Template error: {}", e)))?,

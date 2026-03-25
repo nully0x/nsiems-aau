@@ -7,9 +7,7 @@ pub struct JournalConfig {
 impl Default for JournalConfig {
     fn default() -> Self {
         Self {
-            name: String::from(
-                "African Academic Union - African Journal of Educational Technology",
-            ),
+            name: String::from("Nigerian Studies in Economics and Management Sciences"),
             field: String::from("Educational Technology"),
             description: String::from("A leading journal in educational technology..."),
         }
