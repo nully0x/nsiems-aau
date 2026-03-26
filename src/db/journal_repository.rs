@@ -302,6 +302,29 @@ impl JournalRepository {
         }
     }
 
+    pub fn get_special_editions(
+        &self,
+        limit: i32,
+        offset: i32,
+    ) -> Result<Vec<Journal>, SubmissionError> {
+        let query = format!(
+            "SELECT {} FROM journals WHERE is_special_edition = 1 ORDER BY volume_number DESC, publication_date DESC LIMIT ?1 OFFSET ?2",
+            Self::SELECT_FIELDS
+        );
+        let mut stmt = self
+            .conn
+            .prepare(&query)
+            .map_err(|e| SubmissionError::DatabaseError(e.to_string()))?;
+
+        let journal_iter = stmt
+            .query_map(params![limit, offset], Self::map_row_to_journal)
+            .map_err(|e| SubmissionError::DatabaseError(e.to_string()))?;
+
+        journal_iter
+            .collect::<Result<Vec<Journal>, _>>()
+            .map_err(|e| SubmissionError::DatabaseError(e.to_string()))
+    }
+
     pub fn delete_journal_by_id(&self, id: i32) -> Result<(), SubmissionError> {
         let journal = self.get_journal_by_id(id)?; // Fetch details first (incl. filename)
 
