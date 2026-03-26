@@ -147,13 +147,13 @@
     volumeSelect.addEventListener("change", (e) => {
         currentVolume = e.target.value;
         updateIssueSelect();
-        filterJournals();
+        filterJournalsClientSide();
     });
 
     issueSelect.addEventListener("change", (e) => {
         if (updatingSelect) return;
         currentIssue = e.target.value;
-        filterJournals();
+        filterJournalsClientSide();
     });
 
     // Reset filters
@@ -167,7 +167,7 @@
             li.classList.remove("active");
         });
         document.querySelector('[data-category="all"]').classList.add("active");
-        filterJournals();
+        filterJournalsClientSide();
     });
 
     // Category filtering
@@ -178,6 +178,10 @@
             });
             item.classList.add("active");
             currentCategory = item.dataset.category;
+            currentVolume = "";
+            currentIssue = "";
+            volumeSelect.value = "";
+            issueSelect.value = "";
             currentPage = 1;
             await fetchJournals();
         });
@@ -188,12 +192,17 @@
         item.addEventListener("click", () => {
             currentVolume = item.dataset.volume;
             currentIssue = item.dataset.issue;
+            currentCategory = "all";
+            document.querySelectorAll(".category-list li").forEach((li) => {
+                li.classList.remove("active");
+            });
+            document.querySelector('[data-category="all"]').classList.add("active");
             volumeSelect.value = currentVolume;
             updatingSelect = true;
             updateIssueSelect();
             issueSelect.value = currentIssue;
             updatingSelect = false;
-            filterJournals();
+            filterJournalsClientSide();
         });
     });
 
@@ -203,9 +212,35 @@
         await fetchJournals(true);
     });
 
-    async function filterJournals() {
-        currentPage = 1;
-        await fetchJournals();
+    async function filterJournalsClientSide() {
+        let filtered = journals;
+
+        if (currentVolume) {
+            filtered = filtered.filter(
+                (j) => j.volume_number.toString() === currentVolume,
+            );
+            if (currentIssue) {
+                if (currentIssue === "0") {
+                    filtered = filtered.filter((j) => j.is_special_edition);
+                } else {
+                    filtered = filtered.filter(
+                        (j) => j.issue_number === Number(currentIssue),
+                    );
+                }
+            }
+        }
+
+        if (currentCategory === "special") {
+            filtered = filtered.filter((j) => j.is_special_edition);
+        }
+
+        journalContainer.innerHTML = "";
+        filtered.forEach((journal) => {
+            journalContainer.appendChild(createJournalCard(journal));
+        });
+
+        loadMoreBtn.style.display = "none";
+        updateFilterTitle();
     }
 
     async function fetchJournals(append = false) {
@@ -217,9 +252,6 @@
                 limit: ITEMS_PER_PAGE,
                 category: currentCategory,
             });
-
-            if (currentVolume) params.append("volume", currentVolume);
-            if (currentIssue) params.append("issue", currentIssue);
 
             const response = await fetch(`/api/journals?${params}`);
             if (!response.ok) throw new Error("Failed to fetch journals");
