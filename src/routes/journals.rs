@@ -32,6 +32,14 @@ impl JournalTemplate {
     fn get_journal_count(&self, journals: &[Journal]) -> usize {
         journals.len()
     }
+
+    fn issue_label(&self, issue: &i32) -> String {
+        if *issue == 0 {
+            "Special Edition".to_string()
+        } else {
+            format!("Issue {}", issue)
+        }
+    }
 }
 
 #[derive(Deserialize)]
@@ -137,6 +145,7 @@ pub async fn journal_api_handler(
         "latest" => repository.get_latest_journals(limit)?,
         "current" => repository.get_current_edition(limit)?,
         "past" => repository.get_past_issues(limit, offset)?,
+        "special" => repository.get_special_editions(limit, offset)?,
         _ => repository.get_all_journals(limit, offset)?,
     };
 
@@ -144,7 +153,11 @@ pub async fn journal_api_handler(
         journals.retain(|j| j.volume_number == volume);
 
         if let Some(issue) = query.issue {
-            journals.retain(|j| j.issue_number == Some(issue));
+            if issue == 0 {
+                journals.retain(|j| j.is_special_edition);
+            } else {
+                journals.retain(|j| j.issue_number == Some(issue));
+            }
         }
     }
 
