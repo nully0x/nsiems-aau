@@ -102,6 +102,7 @@
     let currentCategory = "all";
     let currentVolume = "";
     let currentIssue = "";
+    let updatingSelect = false;
     const ITEMS_PER_PAGE = 12;
 
     // DOM Elements
@@ -150,6 +151,7 @@
     });
 
     issueSelect.addEventListener("change", (e) => {
+        if (updatingSelect) return;
         currentIssue = e.target.value;
         filterJournals();
     });
@@ -187,8 +189,10 @@
             currentVolume = item.dataset.volume;
             currentIssue = item.dataset.issue;
             volumeSelect.value = currentVolume;
+            updatingSelect = true;
             updateIssueSelect();
             issueSelect.value = currentIssue;
+            updatingSelect = false;
             filterJournals();
         });
     });
@@ -199,9 +203,9 @@
         await fetchJournals(true);
     });
 
-    function filterJournals() {
+    async function filterJournals() {
         currentPage = 1;
-        fetchJournals();
+        await fetchJournals();
     }
 
     async function fetchJournals(append = false) {
